@@ -13,7 +13,7 @@ function SendTransaction({ sendTransaction, user }: Props) {
     const weiValue = ethers.utils.parseEther(etherAmount);
     const hexWeiValue = ethers.utils.hexlify(weiValue);
     const unsignedTx = {
-      to: user.wallet ? user.wallet.address : "",
+      to: user.wallet ? user.wallet.address : "0xc3Cf221109E88713Bd3901c4821d155c40e15fBC",
       chainId: 122,
       value: hexWeiValue,
     };

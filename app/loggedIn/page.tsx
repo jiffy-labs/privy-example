@@ -27,37 +27,49 @@ function LoggedIn() {
   const { wallets } = useWallets();
   const router = useRouter();
   const [selectedLink, setSelectedLink] = useState<string>("");
-  const [embeddedWallet, setEmbeddedWallet] = useState<any>();
+  const [embeddedWallet, setEmbeddedWallet] = useState<any>(null);
   const [walletBalance, setWalletBalance] = useState<string>("");
 
   useEffect(() => {
-    if (!ready) {
-      return;
-    } else {
-      setUp();
-    }
-    async function setUp() {
+    if (!ready) return;
+    setUp();
+  }, [ready, wallets]);
+
+  async function setUp() {
+    try {
       const embeddedWallet = wallets.find(
         (wallet) => wallet.walletClientType === "privy"
       );
+
       if (embeddedWallet) {
         const provider = await embeddedWallet.getEthereumProvider();
+
+        // Request account access
+        await provider.request({ method: "eth_requestAccounts" });
+
+        // Switch to the Fuse mainnet
         await provider.request({
           method: "wallet_switchEthereumChain",
           params: [{ chainId: `0x${Number(122).toString(16)}` }],
         });
+
         const ethProvider = new ethers.providers.Web3Provider(provider);
-        const walletBalance = await ethProvider.getBalance(
-          embeddedWallet.address
-        );
+        const walletBalance = await ethProvider.getBalance(embeddedWallet.address);
         const ethStringAmount = ethers.utils.formatEther(walletBalance);
+
         setEmbeddedWallet(embeddedWallet);
         setWalletBalance(ethStringAmount);
+      } else {
+        console.error("Embedded wallet not found");
       }
+    } catch (error) {
+      console.error("Error setting up embedded wallet", error);
     }
-  }, [ready, wallets]);
+  }
 
-  if (ready && !authenticated) router.push("/");
+  if (ready && !authenticated) {
+    router.push("/");
+  }
 
   if (!user) return <></>;
 
@@ -73,9 +85,7 @@ function LoggedIn() {
   ];
 
   const handleLinkClick = () => {
-    const selected = linkOptions.find(
-      (option) => option.label === selectedLink
-    );
+    const selected = linkOptions.find((option) => option.label === selectedLink);
     if (selected) {
       selected.action();
     }
@@ -114,8 +124,12 @@ function LoggedIn() {
           Link Selected Account
         </button>
       </div>
-      <p>The Address of the Embedded Wallet is {embeddedWallet?.address}</p>
-      {walletBalance && <p>With a Balance of {walletBalance} ETH</p>}
+      {embeddedWallet && (
+        <>
+          <p>The Address of the Embedded Wallet is {embeddedWallet?.address}</p>
+          {walletBalance && <p>With a Balance of {walletBalance} ETH</p>}
+        </>
+      )}
       <SignMessage signMessage={signMessage} user={user} />
       <SendTransaction sendTransaction={sendTransaction} user={user} />
       <div>
