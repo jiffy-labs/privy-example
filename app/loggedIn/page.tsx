@@ -14,7 +14,7 @@ import {
   createPublicClient,
   http,
 } from "viem";
-import {createSmartAccountClient, walletClientToCustomSigner} from 'permissionless';
+import {createSmartAccountClient, walletClientToSmartAccountSigner} from 'permissionless';
 import {signerToSimpleSmartAccount} from 'permissionless/accounts';
 import {createPimlicoPaymasterClient} from 'permissionless/clients/pimlico';
 import { fuse } from "viem/chains";
@@ -79,7 +79,7 @@ function LoggedIn() {
           transport: custom(provider),
         });
 
-        const customSigner = walletClientToCustomSigner(privyClient);
+        const customSigner = walletClientToSmartAccountSigner(privyClient);
 
         const publicClient = createPublicClient({
           chain: fuse,
