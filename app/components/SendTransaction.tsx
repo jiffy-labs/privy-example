@@ -1,9 +1,10 @@
+
 import { ethers } from "ethers";
 import React from "react";
-import { User } from "@privy-io/react-auth";
+import { SendTransactionModalUIOptions, UnsignedTransactionRequest, User } from "@privy-io/react-auth";
 
 type Props = {
-  sendTransaction: any;
+  sendTransaction: (data: UnsignedTransactionRequest, uiOptions?: SendTransactionModalUIOptions | undefined) => Promise<any>;
   user: User;
 };
 
