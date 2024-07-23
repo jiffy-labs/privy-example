@@ -1,120 +1,27 @@
-
-
 "use client";
 
-import { usePrivy, useWallets } from "@privy-io/react-auth";
+import { usePrivy } from "@privy-io/react-auth";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import SignMessage from "../components/SignMessage";
 import SendTransaction from "../components/SendTransaction";
-import { ethers } from "ethers";
-import {
-  createWalletClient,
-  custom,
-  createPublicClient,
-  http,
-} from "viem";
-import {createSmartAccountClient, walletClientToSmartAccountSigner} from 'permissionless';
-import {signerToSimpleSmartAccount} from 'permissionless/accounts';
-import {createPimlicoPaymasterClient} from 'permissionless/clients/pimlico';
-import { fuse } from "viem/chains";
+import usePrivySmartAccount from "../hooks/usePrivySmartAccount";
 
 function LoggedIn() {
-  const pimlicoApiKey = process.env.PIMLICO_API_KEY;
   const {
     ready,
     authenticated,
-    logout,
     user,
-    linkWallet,
-    linkEmail,
-    linkApple,
-    linkDiscord,
-    linkGithub,
-    linkGoogle,
-    linkPhone,
-    linkTwitter,
-    signMessage,
-    sendTransaction,
-  } = usePrivy();
-  const { wallets } = useWallets();
+    embeddedWallet,
+    walletBalance,
+    wallets,
+  } = usePrivySmartAccount();
+  const { logout, linkWallet, linkEmail, linkApple, linkDiscord, linkGithub, linkGoogle, linkPhone, linkTwitter, signMessage, sendTransaction } = usePrivy();
   const router = useRouter();
   const [selectedLink, setSelectedLink] = useState<string>("");
-  const [embeddedWallet, setEmbeddedWallet] = useState<any>(null);
-  const [walletBalance, setWalletBalance] = useState<string>("");
 
-  useEffect(() => {
-    if (!ready) return;
-    setUp();
-  }, [ready, wallets]);
-
-  async function setUp() {
-    try {
-      const embeddedWallet = wallets.find(
-        (wallet) => wallet.walletClientType === "privy"
-      );
-
-      if (embeddedWallet) {
-        const provider = await embeddedWallet.getEthereumProvider();
-
-        // Request account access
-        await provider.request({ method: "eth_requestAccounts" });
-
-        // Switch to the Fuse mainnet
-        await provider.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: `0x${Number(122).toString(16)}` }],
-        });
-
-        const ethProvider = new ethers.providers.Web3Provider(provider);
-        const walletBalance = await ethProvider.getBalance(embeddedWallet.address);
-        const ethStringAmount = ethers.utils.formatEther(walletBalance);
-
-        setEmbeddedWallet(embeddedWallet);
-        setWalletBalance(ethStringAmount);
-
-        const privyClient = createWalletClient({
-          account: embeddedWallet.address,
-          chain: fuse,
-          transport: custom(provider),
-        });
-
-        const customSigner = walletClientToSmartAccountSigner(privyClient);
-
-        const publicClient = createPublicClient({
-          chain: fuse,
-          transport: http(),
-        });
-
-        const simpleSmartAccount = await signerToSimpleSmartAccount(publicClient, {
-          entryPoint: '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789',
-          signer: customSigner,
-          factoryAddress: '0x9406Cc6185a346906296840746125a0E44976454',
-        });
-
-        const pimlicoPaymaster = createPimlicoPaymasterClient({
-          transport: http('https://api.pimlico.io/v2/fuse/rpc?apikey=${pimlicoApiKey}'),
-          entryPoint: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
-        });
-
-        const smartAccountClient = createSmartAccountClient({
-          account: simpleSmartAccount,
-          chain: fuse,
-          transport: http('https://api.pimlico.io/v1/fuse/rpc?apikey=${pimlicoApiKey}'),
-          sponsorUserOperation: pimlicoPaymaster.sponsorUserOperation,
-        });
-
-        setEmbeddedWallet({ ...embeddedWallet, smartAccountClient });
-      } else {
-        console.error("Embedded wallet not found");
-      }
-    } catch (error) {
-      console.error("Error setting up embedded wallet", error);
-    }
-  }
-
-  if (ready && !authenticated) {
-    router.push("/");
+  if (!ready || !authenticated) {
+    return <></>;
   }
 
   if (!user) return <></>;
@@ -191,3 +98,4 @@ function LoggedIn() {
 }
 
 export default LoggedIn;
+
