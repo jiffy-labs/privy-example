@@ -1,7 +1,7 @@
 "use client";
 
 import { PrivyProvider } from "@privy-io/react-auth";
-import { fuse } from "viem/chains";
+import { fuse, sepolia } from "viem/chains";
 
 const handleLogin = (user: any) => {
   console.log(`User ${user.id} logged in!`);
@@ -31,7 +31,7 @@ function PrivyProviderB({ children }: { children: React.ReactNode }) {
           accentColor: "#676FFF",
           logo: "https://jiffyscan-frontend.vercel.app/images/Frame%2021.svg",
         },
-        supportedChains: [fuse
+        supportedChains: [fuse,sepolia
           // Add any other supported chains here
         ],
       }}
